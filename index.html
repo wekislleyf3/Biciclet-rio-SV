@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bicicletário SV">
+<meta name="theme-color" content="#0d1117">
+<title>Bicicletário SV</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:rgba(255,255,255,0.08);--text:#e6edf3;--muted:#7d8590;--func:#3fb950;--func-bg:rgba(63,185,80,0.1);--func-border:rgba(63,185,80,0.3);--cli:#58a6ff;--cli-bg:rgba(88,166,255,0.1);--cli-border:rgba(88,166,255,0.3);--ifd:#ea1d2c;--ifd-bg:rgba(234,29,44,0.1);--ifd-border:rgba(234,29,44,0.3);--total:#e3b341}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);overflow:hidden}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+  .app{position:relative;z-index:1;height:100vh;display:grid;grid-template-rows:auto auto 1fr auto;max-width:700px;margin:0 auto;padding:0 20px}
+  header{padding:16px 0 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+  .header-left{display:flex;align-items:center;gap:12px}
+  .header-icon{width:40px;height:40px;background:linear-gradient(135deg,#3fb950,#1a7f37);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px rgba(63,185,80,0.25)}
+  .header-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
+  .header-title span{color:var(--func)}
+  .header-date{font-size:11px;font-weight:500;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 14px;text-align:right}
+  .header-date b{display:block;color:var(--text);font-size:12px}
+  .tabs{display:flex;border-bottom:1px solid var(--border)}
+  .tab{flex:1;padding:10px 0;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+  .tab.active{color:var(--func);border-bottom-color:var(--func)}
+  .page{display:none;flex:1;overflow-y:auto;padding:16px 0;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch;padding-bottom:80px}
+  .page.active{display:flex}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px}
+  .card-label{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+  .counters{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .counter-card{border-radius:16px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;border:1.5px solid transparent;position:relative;overflow:hidden}
+  .counter-card::before{content:'';position:absolute;inset:0;opacity:0.04;border-radius:inherit}
+  .counter-card.func{background:var(--func-bg);border-color:var(--func-border)}
+  .counter-card.func::before{background:var(--func)}
+  .counter-card.cli{background:var(--cli-bg);border-color:var(--cli-border)}
+  .counter-card.cli::before{background:var(--cli)}
+  .counter-card.ifd{background:var(--ifd-bg);border-color:var(--ifd-border)}
+  .counter-card.ifd::before{background:var(--ifd)}
+  .card-icon{font-size:24px;line-height:1}
+  .card-label-cat{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;letter-spacing:0.8px;text-transform:uppercase}
+  .counter-card.func .card-label-cat{color:var(--func)}
+  .counter-card.cli .card-label-cat{color:var(--cli)}
+  .counter-card.ifd .card-label-cat{color:var(--ifd)}
+  .card-count{font-family:'Syne',sans-serif;font-weight:800;font-size:52px;line-height:1;letter-spacing:-2px}
+  .counter-card.func .card-count{color:var(--func)}
+  .counter-card.cli .card-count{color:var(--cli)}
+  .counter-card.ifd .card-count{color:var(--ifd)}
+  .add-btn{width:100%;border:none;border-radius:12px;padding:14px 8px;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;cursor:pointer;transition:all 0.12s;display:flex;align-items:center;justify-content:center;gap:6px;position:relative;overflow:hidden}
+  .add-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0.07) 0%,transparent 100%);pointer-events:none}
+  .add-btn.func{background:linear-gradient(135deg,#2ea043,#1a7f37);color:#fff;box-shadow:0 4px 20px rgba(63,185,80,0.3)}
+  .add-btn.cli{background:linear-gradient(135deg,#388bfd,#1f6feb);color:#fff;box-shadow:0 4px 20px rgba(88,166,255,0.3)}
+  .add-btn.ifd{background:linear-gradient(135deg,#ea1d2c,#b71c1c);color:#fff;box-shadow:0 4px 20px rgba(234,29,44,0.3)}
+  .add-btn:active{transform:scale(0.96);box-shadow:none}
+  @keyframes flashCard{0%{transform:scale(1)}40%{transform:scale(1.04)}100%{transform:scale(1)}}
+  .counter-card.flash{animation:flashCard 0.25s ease}
+  .total-bar{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:16px}
+  .total-left{display:flex;flex-direction:column;gap:2px;min-width:80px}
+  .total-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .total-num{font-family:'Syne',sans-serif;font-weight:800;font-size:40px;color:var(--total);line-height:1;letter-spacing:-1px}
+  .total-sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .total-sub b{color:var(--text)}
+  .prop-bar-wrap{flex:1;display:flex;flex-direction:column;gap:7px}
+  .prop-row{display:flex;align-items:center;gap:8px}
+  .prop-lbl{font-size:10px;font-weight:600;width:68px;color:var(--muted)}
+  .prop-track{flex:1;height:7px;background:var(--surface2);border-radius:99px;overflow:hidden}
+  .prop-fill{height:100%;border-radius:99px;transition:width 0.4s cubic-bezier(0.22,1,0.36,1)}
+  .prop-fill.func{background:var(--func)}.prop-fill.cli{background:var(--cli)}.prop-fill.ifd{background:var(--ifd)}
+  .prop-pct{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;width:34px;text-align:right}
+  .prop-pct.func{color:var(--func)}.prop-pct.cli{color:var(--cli)}.prop-pct.ifd{color:var(--ifd)}
+  .turnos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .turno-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+  .turno-icon{font-size:20px;margin-bottom:4px}
+  .turno-nome{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+  .turno-hora{font-size:10px;color:var(--muted);margin-bottom:6px}
+  .turno-num{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);line-height:1}
+  .turno-box.ativo{border-color:var(--total);background:rgba(227,179,65,0.07)}
+  .turno-box.ativo .turno-nome{color:var(--total)}
+  .turno-sub{font-size:10px;color:var(--muted);margin-top:3px}
+  .grafico-wrap{display:flex;align-items:flex-end;gap:3px;height:60px;padding-top:4px}
+  .bar-hora{flex:1;border-radius:4px 4px 0 0;min-height:2px;transition:height 0.3s ease}
+  .bar-hora.manha{background:rgba(227,179,65,0.5)}
+  .bar-hora.tarde{background:rgba(88,166,255,0.5)}
+  .bar-hora.noite{background:rgba(188,140,255,0.5)}
+  .bar-hora.ativa{filter:brightness(1.5)}
+  .grafico-labels{display:flex;gap:3px;margin-top:4px}
+  .grafico-labels span{flex:1;text-align:center;font-size:8px;color:var(--muted)}
+  .footer-bar{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(13,17,23,0.97);backdrop-filter:blur(8px);border-top:1px solid var(--border)}
+  .footer-inner{max-width:700px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .undo-btn{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.15s}
+  .undo-btn:disabled{opacity:0.3;cursor:default}
+  .hora-pill{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 14px;letter-spacing:1px}
+  .reset-btn{background:rgba(248,81,73,0.08);border:1px solid rgba(248,81,73,0.2);border-radius:10px;padding:9px 14px;font-size:12px;font-weight:600;color:#f85149;cursor:pointer}
+  .relatorio-btn{width:100%;background:linear-gradient(135deg,#e3b341,#b8860b);border:none;border-radius:14px;padding:16px;font-family:'Syne',sans-serif;font-weight:800;font-size:17px;color:#000;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:10px}
+  .relatorio-btn:active{transform:scale(0.97);opacity:0.9}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:100;display:none;align-items:center;justify-content:center;padding:24px}
+  .modal-overlay.show{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:340px;animation:popIn 0.25s cubic-bezier(0.175,0.885,0.32,1.275) both}
+  @keyframes popIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
+  .modal-icon{font-size:40px;text-align:center;margin-bottom:12px}
+  .modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;text-align:center;margin-bottom:8px}
+  .modal-text{font-size:13px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:20px}
+  .modal-text b{color:var(--text)}
+  .modal-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .modal-cancel{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:13px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer}
+  .modal-confirm{background:#f85149;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;font-family:'Syne',sans-serif}
+  .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;opacity:0;transition:all 0.25s ease;pointer-events:none;z-index:999;white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  /* Banner de instalação PWA */
+  .install-banner{position:fixed;top:0;left:0;right:0;z-index:200;background:linear-gradient(135deg,#1a7f37,#2ea043);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 4px 20px rgba(63,185,80,0.4);transform:translateY(-100%);transition:transform 0.3s ease}
+  .install-banner.show{transform:translateY(0)}
+  .install-banner-text{font-size:13px;font-weight:600;color:#fff;line-height:1.4}
+  .install-banner-text b{display:block;font-family:'Syne',sans-serif;font-size:14px}
+  .install-banner-btns{display:flex;gap:8px;flex-shrink:0}
+  .install-yes{background:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;color:#1a7f37;cursor:pointer;font-family:'Syne',sans-serif}
+  .install-no{background:rgba(255,255,255,0.2);border:none;border-radius:8px;padding:8px 10px;font-size:13px;color:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- BANNER INSTALAR APP -->
+<div class="install-banner" id="installBanner">
+  <div class="install-banner-text"><b>📲 Instalar App</b>Adicione à tela inicial para usar offline</div>
+  <div class="install-banner-btns">
+    <button class="install-yes" id="installYes">Instalar</button>
+    <button class="install-no" id="installNo">✕</button>
+  </div>
+</div>
+
+<div class="app">
+  <header>
+    <div class="header-left">
+      <div class="header-icon">🚲</div>
+      <div class="header-title">Bicicle<span>tário SV</span></div>
+    </div>
+    <div class="header-date"><span id="diaSemana">—</span><b id="dataHoje">—</b></div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('contar',this)">🚲 Contar</button>
+    <button class="tab" onclick="showTab('turnos',this)">⏱ Turnos</button>
+    <button class="tab" onclick="showTab('relatorio',this)">📄 Relatório</button>
+  </div>
+
+  <!-- ABA CONTAR -->
+  <div class="page active" id="tab-contar">
+    <div class="card" style="padding:14px">
+      <div class="counters">
+        <div class="counter-card func" id="cardFunc"><div class="card-icon">👷</div><div class="card-label-cat">Func.</div><div class="card-count" id="numFunc">0</div></div>
+        <div class="counter-card cli"  id="cardCli"> <div class="card-icon">🧑</div><div class="card-label-cat">Clientes</div><div class="card-count" id="numCli">0</div></div>
+        <div class="counter-card ifd"  id="cardIfd"> <div class="card-icon">🛵</div><div class="card-label-cat">iFood</div><div class="card-count" id="numIfd">0</div></div>
+      </div>
+    </div>
+    <div class="card" style="padding:14px">
+      <div class="counters">
+        <button class="add-btn func" onclick="adicionar('func')">+ Funcionário</button>
+        <button class="add-btn cli"  onclick="adicionar('cli')">+ Cliente</button>
+        <button class="add-btn ifd"  onclick="adicionar('ifd')">+ iFood</button>
+      </div>
+    </div>
+    <div class="total-bar">
+      <div class="total-left">
+        <div class="total-label">Total do dia</div>
+        <div class="total-num" id="totalNum">0</div>
+        <div class="total-sub"><b id="totalFunc">0</b> func · <b id="totalCli">0</b> cli · <b id="totalIfd">0</b> iFood</div>
+      </div>
+      <div class="prop-bar-wrap">
+        <div class="prop-row"><span class="prop-lbl">👷 Func.</span><div class="prop-track"><div class="prop-fill func" id="barFunc" style="width:0%"></div></div><span class="prop-pct func" id="pctFunc">—</span></div>
+        <div class="prop-row"><span class="prop-lbl">🧑 Clientes</span><div class="prop-track"><div class="prop-fill cli" id="barCli" style="width:0%"></div></div><span class="prop-pct cli" id="pctCli">—</span></div>
+        <div class="prop-row"><span class="prop-lbl">🛵 iFood</span><div class="prop-track"><div class="prop-fill ifd" id="barIfd" style="width:0%"></div></div><span class="prop-pct ifd" id="pctIfd">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABA TURNOS -->
+  <div class="page" id="tab-turnos">
+    <div class="card">
+      <div class="card-label">Turno Atual</div>
+      <div class="turnos-grid">
+        <div class="turno-box" id="turnoManha"><div class="turno-icon">🌅</div><div class="turno-nome">Manhã</div><div class="turno-hora">06h – 12h</div><div class="turno-num" id="numManha">0</div><div class="turno-sub" id="subManha">—</div></div>
+        <div class="turno-box" id="turnoTarde"><div class="turno-icon">☀️</div><div class="turno-nome">Tarde</div><div class="turno-hora">12h – 18h</div><div class="turno-num" id="numTarde">0</div><div class="turno-sub" id="subTarde">—</div></div>
+        <div class="turno-box" id="turnoNoite"><div class="turno-icon">🌙</div><div class="turno-nome">Noite</div><div class="turno-hora">18h – 00h</div><div class="turno-num" id="numNoite">0</div><div class="turno-sub" id="subNoite">—</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Volume por Hora</div>
+      <div class="grafico-wrap" id="graficoHoras"></div>
+      <div class="grafico-labels" id="graficoLabels"></div>
+      <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;font-weight:600;color:var(--muted)">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(227,179,65,0.6);margin-right:4px"></span>Manhã</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(88,166,255,0.6);margin-right:4px"></span>Tarde</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(188,140,255,0.6);margin-right:4px"></span>Noite</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label">Horário de Pico</div>
+      <div id="picoInfo" style="font-size:14px;color:var(--muted);padding:6px 0">Nenhum registro ainda</div>
+    </div>
+  </div>
+
+  <!-- ABA RELATÓRIO -->
+  <div class="page" id="tab-relatorio">
+    <div class="card">
+      <div class="card-label">Gerar Relatório do Dia</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px">
+        O PDF vai conter:<br>
+        • <b style="color:var(--text)">Total por categoria</b> (funcionários, clientes, iFood)<br>
+        • <b style="color:var(--text)">Volume por turno</b> (manhã / tarde / noite)<br>
+        • <b style="color:var(--text)">Horário de pico</b> do dia<br>
+        • <b style="color:var(--text)">Tabela hora a hora</b> das 6h às 23h
+      </div>
+      <button class="relatorio-btn" onclick="gerarPDF()">📄 Gerar e Baixar PDF</button>
+    </div>
+    <div class="card">
+      <div class="card-label">Prévia do Resumo</div>
+      <div id="previaResumo"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER FIXO -->
+<div class="footer-bar">
+  <div class="footer-inner">
+    <button class="undo-btn" id="undoBtn" onclick="desfazer()" disabled>↩ Desfazer</button>
+    <div class="hora-pill" id="relogioHora">--:--</div>
+    <button class="reset-btn" onclick="abrirModal()">🔄 Zerar dia</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-icon">🔄</div>
+    <div class="modal-title">Zerar contagem?</div>
+    <div class="modal-text">Apaga todos os dados de hoje.<br>Total atual: <b id="modalTotal">0 pessoas</b></div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="modal-confirm" onclick="resetar()">Zerar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── PWA: Service Worker ──────────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+
+// ── PWA: Prompt de instalação ────────────────────────────────────
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const banner = document.getElementById('installBanner');
+  banner.classList.add('show');
+});
+document.getElementById('installYes').addEventListener('click', async () => {
+  document.getElementById('installBanner').classList.remove('show');
+  if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt=null; }
+});
+document.getElementById('installNo').addEventListener('click', () => {
+  document.getElementById('installBanner').classList.remove('show');
+});
+window.addEventListener('appinstalled', () => {
+  mostrarToast('✅ App instalado com sucesso!');
+});
+
+// ── Dados ────────────────────────────────────────────────────────
+let contadores = {func:0,cli:0,ifd:0};
+let porHora = {};
+let ultimaAcao = null;
+const diaKey = new Date().toDateString();
+
+if(localStorage.getItem('bici_dia') !== diaKey){
+  limparStorage();
+} else {
+  contadores = JSON.parse(localStorage.getItem('bici_cont') || '{"func":0,"cli":0,"ifd":0}');
+  porHora    = JSON.parse(localStorage.getItem('bici_horas') || '{}');
+}
+
+function salvarStorage(){
+  localStorage.setItem('bici_dia',   diaKey);
+  localStorage.setItem('bici_cont',  JSON.stringify(contadores));
+  localStorage.setItem('bici_horas', JSON.stringify(porHora));
+}
+function limparStorage(){
+  contadores={func:0,cli:0,ifd:0}; porHora={};
+  localStorage.setItem('bici_dia',diaKey);
+  localStorage.setItem('bici_cont',JSON.stringify(contadores));
+  localStorage.setItem('bici_horas',JSON.stringify(porHora));
+}
+
+atualizar(); atualizarDataHora(); setInterval(atualizarDataHora,1000);
+
+function showTab(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='turnos')    renderTurnos();
+  if(id==='relatorio') renderPrevia();
+}
+
+function adicionar(tipo){
+  contadores[tipo]++;
+  const h=new Date().getHours();
+  if(!porHora[h]) porHora[h]={func:0,cli:0,ifd:0};
+  porHora[h][tipo]++;
+  ultimaAcao={tipo,hora:h};
+  document.getElementById('undoBtn').disabled=false;
+  salvarStorage(); flashCard(tipo); atualizar();
+  const m={func:'👷 Funcionário registrado',cli:'🧑 Cliente registrado',ifd:'🛵 iFood registrado'};
+  mostrarToast(m[tipo]);
+}
+
+function desfazer(){
+  if(!ultimaAcao) return;
+  const {tipo,hora}=ultimaAcao;
+  if(contadores[tipo]>0){
+    contadores[tipo]--;
+    if(porHora[hora]&&porHora[hora][tipo]>0) porHora[hora][tipo]--;
+  }
+  ultimaAcao=null;
+  document.getElementById('undoBtn').disabled=true;
+  salvarStorage(); atualizar(); mostrarToast('↩ Último registro desfeito');
+}
+
+function resetar(){
+  limparStorage(); ultimaAcao=null;
+  document.getElementById('undoBtn').disabled=true;
+  fecharModal(); atualizar(); mostrarToast('🔄 Contagem zerada');
+}
+
+function atualizar(){
+  const {func,cli,ifd}=contadores;
+  const total=func+cli+ifd;
+  document.getElementById('numFunc').textContent=func;
+  document.getElementById('numCli').textContent=cli;
+  document.getElementById('numIfd').textContent=ifd;
+  document.getElementById('totalNum').textContent=total;
+  document.getElementById('totalFunc').textContent=func;
+  document.getElementById('totalCli').textContent=cli;
+  document.getElementById('totalIfd').textContent=ifd;
+  document.getElementById('modalTotal').textContent=total+(total===1?' pessoa':' pessoas');
+  const pF=total>0?Math.round(func/total*100):0;
+  const pC=total>0?Math.round(cli/total*100):0;
+  const pI=total>0?Math.round(ifd/total*100):0;
+  document.getElementById('barFunc').style.width=pF+'%';
+  document.getElementById('barCli').style.width=pC+'%';
+  document.getElementById('barIfd').style.width=pI+'%';
+  document.getElementById('pctFunc').textContent=total>0?pF+'%':'—';
+  document.getElementById('pctCli').textContent=total>0?pC+'%':'—';
+  document.getElementById('pctIfd').textContent=total>0?pI+'%':'—';
+}
+
+function getTurno(h){
+  if(h>=6&&h<12) return 'manha';
+  if(h>=12&&h<18) return 'tarde';
+  if(h>=18&&h<24) return 'noite';
+  return null;
+}
+
+function calcTurnos(){
+  const t={manha:{func:0,cli:0,ifd:0},tarde:{func:0,cli:0,ifd:0},noite:{func:0,cli:0,ifd:0}};
+  for(const [h,v] of Object.entries(porHora)){
+    const turno=getTurno(parseInt(h));
+    if(turno){t[turno].func+=v.func||0;t[turno].cli+=v.cli||0;t[turno].ifd+=v.ifd||0}
+  }
+  return t;
+}
+function totT(t){return t.func+t.cli+t.ifd}
+
+function renderTurnos(){
+  const t=calcTurnos();
+  const ha=new Date().getHours();
+  const ta=getTurno(ha);
+  [{k:'manha',id:'Manha'},{k:'tarde',id:'Tarde'},{k:'noite',id:'Noite'}].forEach(({k,id})=>{
+    const tot=totT(t[k]);
+    document.getElementById('num'+id).textContent=tot;
+    document.getElementById('sub'+id).textContent=`${t[k].func} func · ${t[k].cli} cli · ${t[k].ifd} iFood`;
+    document.getElementById('turno'+id).className='turno-box'+(ta===k?' ativo':'');
+  });
+  renderGrafico(); renderPico();
+}
+
+function renderGrafico(){
+  const horas=Array.from({length:18},(_,i)=>i+6);
+  const maxV=Math.max(1,...horas.map(h=>{const v=porHora[h];return v?v.func+v.cli+v.ifd:0}));
+  const ha=new Date().getHours();
+  document.getElementById('graficoHoras').innerHTML=horas.map(h=>{
+    const v=porHora[h]||{func:0,cli:0,ifd:0};
+    const tot=v.func+v.cli+v.ifd;
+    const pct=Math.round(tot/maxV*100);
+    const turno=getTurno(h)||'noite';
+    return `<div class="bar-hora ${turno}${h===ha?' ativa':''}" style="height:${Math.max(pct,2)}%" title="${h}h: ${tot}"></div>`;
+  }).join('');
+  document.getElementById('graficoLabels').innerHTML=horas.map(h=>`<span>${h%2===0?h+'h':''}</span>`).join('');
+}
+
+function renderPico(){
+  let pH=-1,pV=0;
+  for(const [h,v] of Object.entries(porHora)){const tot=v.func+v.cli+v.ifd;if(tot>pV){pV=tot;pH=parseInt(h)}}
+  const el=document.getElementById('picoInfo');
+  if(pV===0){el.textContent='Nenhum registro ainda';return}
+  const tn=getTurno(pH);
+  const nm={manha:'Manhã 🌅',tarde:'Tarde ☀️',noite:'Noite 🌙'};
+  el.innerHTML=`<span style="font-size:16px;font-weight:700;color:var(--total)">${pH}h – ${pH+1}h</span> <span style="font-size:13px;color:var(--muted)">· ${pV} pessoa${pV>1?'s':''} · ${nm[tn]||''}</span>`;
+}
+
+function renderPrevia(){
+  const {func,cli,ifd}=contadores;
+  const total=func+cli+ifd;
+  const t=calcTurnos();
+  const linhas=[
+    {l:'Total geral',v:total+' pessoas',c:'var(--total)'},
+    {l:'👷 Funcionários',v:func,c:'var(--func)'},
+    {l:'🧑 Clientes',v:cli,c:'var(--cli)'},
+    {l:'🛵 iFood',v:ifd,c:'var(--ifd)'},
+    {l:'🌅 Manhã (06–12h)',v:totT(t.manha)+' pessoas',c:'rgba(227,179,65,0.9)'},
+    {l:'☀️ Tarde (12–18h)',v:totT(t.tarde)+' pessoas',c:'rgba(88,166,255,0.9)'},
+    {l:'🌙 Noite (18–00h)',v:totT(t.noite)+' pessoas',c:'rgba(188,140,255,0.9)'},
+  ];
+  document.getElementById('previaResumo').innerHTML=linhas.map(l=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px;color:var(--muted)">${l.l}</span>
+      <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:${l.c}">${l.v}</span>
+    </div>`).join('');
+}
+
+function gerarPDF(){
+  const {func,cli,ifd}=contadores;
+  const total=func+cli+ifd;
+  const t=calcTurnos();
+  const now=new Date();
+  const dataStr=now.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  const horaStr=now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+  let pH=-1,pV=0;
+  for(const [h,v] of Object.entries(porHora)){const tot=v.func+v.cli+v.ifd;if(tot>pV){pV=tot;pH=parseInt(h)}}
+  const picoStr=pV>0?`⚡ Horário de pico: ${pH}h – ${pH+1}h com ${pV} pessoa${pV>1?'s':''}`:'Nenhum pico identificado no dia';
+
+  const horas=Array.from({length:18},(_,i)=>i+6);
+  const maxV=Math.max(1,...horas.map(h=>{const v=porHora[h];return v?v.func+v.cli+v.ifd:0}));
+
+  const rows=horas.map(h=>{
+    const v=porHora[h]||{func:0,cli:0,ifd:0};
+    const tot=v.func+v.cli+v.ifd;
+    const tn=getTurno(h);
+    const tl=tn==='manha'?'Manhã':tn==='tarde'?'Tarde':'Noite';
+    const cor=tn==='manha'?'#b8860b':tn==='tarde'?'#1f6feb':'#7b5ea7';
+    const bw=Math.round(tot/maxV*80);
+    const bg=h%2===0?'#fafafa':'#ffffff';
+    return `<tr style="background:${bg}">
+      <td style="padding:8px 10px;border:1px solid #ddd"><b>${h}h – ${h+1}h</b></td>
+      <td style="padding:8px 10px;border:1px solid #ddd;color:${cor};font-weight:700">${tl}</td>
+      <td style="padding:8px 10px;border:1px solid #ddd;text-align:center">${v.func}</td>
+      <td style="padding:8px 10px;border:1px solid #ddd;text-align:center">${v.cli}</td>
+      <td style="padding:8px 10px;border:1px solid #ddd;text-align:center">${v.ifd}</td>
+      <td style="padding:8px 10px;border:1px solid #ddd;text-align:center;font-weight:700">${tot}</td>
+      <td style="padding:8px 10px;border:1px solid #ddd"><div style="height:8px;border-radius:4px;width:${bw}px;min-width:${tot>0?4:0}px;background:${cor}"></div></td>
+    </tr>`;
+  }).join('');
+
+  const html=`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bicicletário SV – Relatório ${dataStr}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Arial,sans-serif;color:#111;background:#fff;padding:32px;max-width:750px;margin:0 auto}
+  .header{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:16px;border-bottom:3px solid #111;margin-bottom:28px}
+  .logo{font-size:26px;font-weight:900;line-height:1}
+  .sub{font-size:12px;color:#777;margin-top:4px}
+  .meta{text-align:right;font-size:12px;color:#555}
+  .meta b{display:block;font-size:14px;color:#111;margin-bottom:2px}
+  .section{margin-bottom:28px}
+  .section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:14px;padding-bottom:5px;border-bottom:1px solid #ddd}
+  .totais{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .box{border:2px solid #eee;border-radius:10px;padding:16px 10px;text-align:center}
+  .box-num{font-size:36px;font-weight:900;line-height:1}
+  .box-lbl{font-size:11px;font-weight:600;text-transform:uppercase;color:#777;margin-top:5px}
+  .box.total .box-num{color:#b8860b}
+  .box.func  .box-num{color:#1a7f37}
+  .box.cli   .box-num{color:#1f6feb}
+  .box.ifd   .box-num{color:#b71c1c}
+  .turnos{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .turno{border:1px solid #eee;border-radius:10px;padding:16px;text-align:center}
+  .turno-icon{font-size:22px;margin-bottom:6px}
+  .turno-nome{font-size:12px;font-weight:700;text-transform:uppercase;color:#555}
+  .turno-hora{font-size:11px;color:#888;margin-bottom:10px}
+  .turno-num{font-size:32px;font-weight:900;color:#111;line-height:1}
+  .turno-det{font-size:11px;color:#777;margin-top:5px}
+  .pico{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;font-size:13px;font-weight:600;color:#856404;margin-top:14px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:#f4f4f4;padding:9px 10px;text-align:left;font-weight:700;border:1px solid #ddd;font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
+  .footer{margin-top:32px;padding-top:12px;border-top:1px solid #ddd;font-size:11px;color:#aaa;text-align:center}
+  @media print{body{padding:0}}
+  @page{margin:1.5cm;size:A4}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">🚲 Bicicletário SV</div>
+    <div class="sub">Relatório Diário de Acessos</div>
+  </div>
+  <div class="meta">
+    <b>${dataStr}</b>
+    Gerado às ${horaStr}
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Totais do Dia</div>
+  <div class="totais">
+    <div class="box total"><div class="box-num">${total}</div><div class="box-lbl">Total Geral</div></div>
+    <div class="box func"><div class="box-num">${func}</div><div class="box-lbl">👷 Funcionários</div></div>
+    <div class="box cli"><div class="box-num">${cli}</div><div class="box-lbl">🧑 Clientes</div></div>
+    <div class="box ifd"><div class="box-num">${ifd}</div><div class="box-lbl">🛵 iFood</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Volume por Turno</div>
+  <div class="turnos">
+    <div class="turno"><div class="turno-icon">🌅</div><div class="turno-nome">Manhã</div><div class="turno-hora">06h – 12h</div><div class="turno-num">${totT(t.manha)}</div><div class="turno-det">${t.manha.func} func · ${t.manha.cli} cli · ${t.manha.ifd} iFood</div></div>
+    <div class="turno"><div class="turno-icon">☀️</div><div class="turno-nome">Tarde</div><div class="turno-hora">12h – 18h</div><div class="turno-num">${totT(t.tarde)}</div><div class="turno-det">${t.tarde.func} func · ${t.tarde.cli} cli · ${t.tarde.ifd} iFood</div></div>
+    <div class="turno"><div class="turno-icon">🌙</div><div class="turno-nome">Noite</div><div class="turno-hora">18h – 00h</div><div class="turno-num">${totT(t.noite)}</div><div class="turno-det">${t.noite.func} func · ${t.noite.cli} cli · ${t.noite.ifd} iFood</div></div>
+  </div>
+  <div class="pico">${picoStr}</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Detalhamento Hora a Hora</div>
+  <table>
+    <thead><tr><th>Horário</th><th>Turno</th><th>Func.</th><th>Clientes</th><th>iFood</th><th>Total</th><th>Volume</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+</div>
+
+<div class="footer">Bicicletário SV · Relatório gerado em ${dataStr} às ${horaStr}</div>
+
+</body>
+</html>`;
+
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const nomeArquivo=`bicicletario-sv-${now.toLocaleDateString('pt-BR').replace(/\//g,'-')}.html`;
+  const a=document.createElement('a');
+  a.href=url; a.download=nomeArquivo;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+  mostrarToast('📄 Arquivo baixado! Abra e imprima como PDF');
+}
+
+function atualizarDataHora(){
+  const now=new Date();
+  const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  document.getElementById('diaSemana').textContent=dias[now.getDay()];
+  document.getElementById('dataHoje').textContent=`${now.getDate()} ${meses[now.getMonth()]} ${now.getFullYear()}`;
+  document.getElementById('relogioHora').textContent=now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+
+function flashCard(tipo){
+  const ids={func:'cardFunc',cli:'cardCli',ifd:'cardIfd'};
+  const c=document.getElementById(ids[tipo]);
+  c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+  setTimeout(()=>c.classList.remove('flash'),300);
+}
+
+function abrirModal(){document.getElementById('modalOverlay').classList.add('show')}
+function fecharModal(){document.getElementById('modalOverlay').classList.remove('show')}
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal()});
+
+function mostrarToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2400);
+}
+</script>
+</body>
+</html>
